@@ -3,9 +3,9 @@ class FeedbackForm {
   String name;
   String dob;
   String uid;
-  String pincode;
+  String pinCode;
 
-  FeedbackForm(this.name, this.dob, this.uid, this.pincode);
+  FeedbackForm(this.name, this.dob, this.uid, this.pinCode);
 
-  String toParams() => "?name=$name&dob=$dob&uid=$uid&pincode=$pincode";
+  String toParams() => "?name=$name&dob=$dob&uid=$uid&pincode=$pinCode";
 }

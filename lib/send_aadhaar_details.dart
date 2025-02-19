@@ -46,20 +46,19 @@ class _SendAadhaarDetailsState extends State<SendAadhaarDetails> {
 
       FormController formController = FormController(
               (String response) {
-            print(response);
             if(response == FormController.STATUS_SUCCESS){
-              _showSnackbar("Feedback Submitted");
+              _showSnackBar("Feedback Submitted");
             } else {
-              _showSnackbar("Error Occured");
+              _showSnackBar("Error Occured");
             }
           }
       );
-      _showSnackbar("Submitting Feedback");
+      _showSnackBar("Submitting Feedback");
       formController.submitForm(feedbackForm);
     }
   }
 
-  _showSnackbar(String message) {
+  _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar( content: Text(message), duration: Duration(milliseconds: 300), ), );
   }
 

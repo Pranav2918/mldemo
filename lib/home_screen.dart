@@ -123,6 +123,7 @@ class _TextRecognitionState extends State<TextRecognition> {
             Iterable<Match> matches = aadhaarRegex.allMatches(line.text);
             if(matches.isNotEmpty){
               uid = matches.first.group(0)!;
+              uid = uid.replaceRange(uid.length - 4, uid.length, "XXXX");
             }
           }
 
@@ -144,11 +145,6 @@ class _TextRecognitionState extends State<TextRecognition> {
             }
           }
           if (nameFound) continue;
-
-          print("Name $name");
-          print("UID $uid");
-          print("Dob $dob");
-          print("Gender $gender");
         }
       }
     } catch (e) {
@@ -206,7 +202,6 @@ class _TextRecognitionState extends State<TextRecognition> {
       if (!mounted) {
         return;
       }
-      print("Recognized Text ${recognizedText}");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Text copied to clipboard'),

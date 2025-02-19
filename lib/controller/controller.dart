@@ -19,7 +19,7 @@ class FormController {
         callback(convert.jsonDecode(response.body)["status"]);
       });
     }catch(e){
-      print(e);
+      throw Exception(e);
     }
   }
 }
