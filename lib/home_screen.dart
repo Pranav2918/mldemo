@@ -77,6 +77,7 @@ class _TextRecognitionState extends State<TextRecognition> {
 
           recognizedText += "${line.text}\n";
 
+
           // Name search
           if (line.text.contains("Name") || RegExp(r'^[A-Z][a-z]+ [A-Z][a-z]+ [A-Z][a-z]+').hasMatch(line.text) && !line.text.contains(RegExp(r'[0-9]'))){
             name = line.text;
@@ -284,7 +285,7 @@ class _TextRecognitionState extends State<TextRecognition> {
                           child: SelectableText(
                             recognizedText.isEmpty
                                 ? "No text recognized"
-                                : recognizedText,
+                                : "UID: $uid\nName: $name\nDOB: $dob\nGender: $gender",
                           ),
                         ),
                       ],
