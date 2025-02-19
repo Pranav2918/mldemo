@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_regex/flutter_regex.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mldemo/image_preview.dart';
+import 'package:mldemo/send_aadhaar_details.dart';
+
+import 'image_preview.dart';
 
 class TextRecognition extends StatefulWidget {
   const TextRecognition({super.key});
@@ -17,6 +20,14 @@ class _TextRecognitionState extends State<TextRecognition> {
 
   String? pickedImagePath;
   String recognizedText = "";
+
+
+  String name = "";
+  String uid = "";
+  String gender = "";
+  String dob = "";
+  bool collectingName = false;
+  bool nameFound = false;
 
   bool isRecognizing = false;
 
@@ -43,13 +54,101 @@ class _TextRecognitionState extends State<TextRecognition> {
     try {
       final inputImage = InputImage.fromFilePath(pickedImage.path);
       final RecognizedText recognisedText =
-          await textRecognizer.processImage(inputImage);
+      await textRecognizer.processImage(inputImage);
 
       recognizedText = "";
 
+      bool isPossibleName(String text) {
+
+        return text.isNotEmpty &&
+            text.length > 1 &&
+            text.isDateTimeUTC() == false &&
+            RegExp(r'^[A-Z][a-zA-Z\s]*$').hasMatch(text) &&
+            text != 'GOVERNMENT OF INDIA' && text != 'Government of India' && text != 'Government of ndia' &&
+            !text.toLowerCase().contains('issue date') &&
+            !text.toLowerCase().contains('dob') &&
+            !text.contains(RegExp('\b(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}\b'));
+      }
+
+
+
       for (TextBlock block in recognisedText.blocks) {
         for (TextLine line in block.lines) {
+
           recognizedText += "${line.text}\n";
+
+          // Name search
+          if (line.text.contains("Name") || RegExp(r'^[A-Z][a-z]+ [A-Z][a-z]+ [A-Z][a-z]+').hasMatch(line.text) && !line.text.contains(RegExp(r'[0-9]'))){
+            name = line.text;
+            int index = line.text.indexOf("Name");
+            int startIndex = index + 4;
+            name = line.text.substring(startIndex).trim();
+            nameFound = true;
+
+          }
+
+
+
+          // Gender Search
+          if(line.text.contains("Gender:")){
+            int index = line.text.indexOf("Gender:");
+            int startIndex = index + 7;
+            gender = line.text.substring(startIndex).trim();
+          } else if(line.text.toUpperCase().contains("MALE")){
+            gender = "Male";
+          } else if(line.text.toUpperCase().contains("FEMALE")){
+            gender = "Female";
+          }
+
+          // DOB search
+
+          if(line.text.contains("DOB")){
+            int index = line.text.indexOf("DOB");
+            int startIndex = index + 3;
+            dob = line.text.substring(startIndex).trim();
+          }
+
+          if(line.text.contains("DOB:") || line.text.contains("Year of Birth")){
+            int index = line.text.indexOf("DOB:");
+            int startIndex = index + 4;
+            dob = line.text.substring(startIndex).trim();
+          }
+
+
+
+          //UID Search
+          RegExp aadhaarRegex = RegExp(r"\b\d{4}\s\d{4}\s\d{4}\b");
+
+          for (int i = 0; i < line.text.length; i++) {
+            Iterable<Match> matches = aadhaarRegex.allMatches(line.text);
+            if(matches.isNotEmpty){
+              uid = matches.first.group(0)!;
+            }
+          }
+
+          RegExp nameRegExp = RegExp(r'\b[A-Z][a-zA-Z]+\s[A-Z][a-zA-Z]+\s[A-Z][a-zA-Z]+\b');
+
+          for (int i = 0; i < line.text.length; i++) {
+            Iterable<RegExpMatch> matches = nameRegExp.allMatches(line.text);
+
+            if (matches.isNotEmpty) {
+              name = matches.first.group(0)!;
+            }
+          }
+          if (isPossibleName(line.text)) {
+            // Start collecting the name if not already started
+            if (!collectingName) {
+              name = line.text;
+              collectingName = true;
+              nameFound = true;
+            }
+          }
+          if (nameFound) continue;
+
+          print("Name $name");
+          print("UID $uid");
+          print("Dob $dob");
+          print("Gender $gender");
         }
       }
     } catch (e) {
@@ -107,12 +206,17 @@ class _TextRecognitionState extends State<TextRecognition> {
       if (!mounted) {
         return;
       }
-
+      print("Recognized Text ${recognizedText}");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Text copied to clipboard'),
         ),
       );
+      Navigator.of(context).push(MaterialPageRoute(builder: (context) => SendAadhaarDetails(
+        name: name,
+        uid: uid,
+        dob: dob,
+        gender: gender,),));
     }
   }
 
